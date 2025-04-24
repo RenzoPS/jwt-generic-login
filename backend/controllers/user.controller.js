@@ -1,9 +1,17 @@
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const { getSecret } = require('../config/jwt.config')
+
+const generateToken = (userId) => {
+    return jwt.sign({ id: userId }, getSecret(), {
+        expiresIn: '24h'
+    })
+}
 
 // Registro de nuevo usuario
 exports.register = async (req, res) => {
-    try{
+    try {
         const { username, email, password } = req.body
 
         // Validación: Verifica que todos los campos requeridos estén presentes
@@ -17,40 +25,56 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' })
         }
 
-        // Crea un nuevo usuario con los datos proporcionados
+        // Crea un nuevo usuario (el hash de la contraseña se hace en el modelo)
         const newUser = new User({ username, email, password })
         await newUser.save()
 
         // Genera un token JWT para el nuevo usuario
-        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' })
-        res.status(201).json({ message: 'User registered successfully', token })
+        const token = generateToken(newUser._id)
+        res.status(201).json({
+            token,
+            user: {
+                id: newUser._id,
+                username: newUser.username,
+                email: newUser.email
+            }
+        })
 
     } catch (e) {
+        console.error('Registration error:', e)
         res.status(500).json({error: e.message})
     }
 }
 
 // Login de usuario
 exports.login = async (req, res) => {
-    try{
+    try {
         const { email, password } = req.body
 
         // Busca el usuario por email
-        const userLogin = await User.findOne({ email })
-        if (!userLogin) {
+        const user = await User.findOne({ email })
+        if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' })
         }
 
-        // Verifica la contraseña usando el método comparePassword
-        const isPasswordValid = await userLogin.comparePassword(password)
-        if (!isPasswordValid) {
+        // Verifica la contraseña usando bcrypt directamente
+        const isMatch = await bcrypt.compare(password, user.password)
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' })
         }
 
         // Genera un token JWT para el usuario autenticado
-        const token = jwt.sign({ id: userLogin._id }, process.env.JWT_SECRET, { expiresIn: '1h' })
-        res.status(200).json({ message: 'Login successful', token })
+        const token = generateToken(user._id)
+        res.status(200).json({
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        })
     } catch (e) {
+        console.error('Login error:', e)
         res.status(500).json({error: e.message})
     }
 }
@@ -66,11 +90,11 @@ exports.logout = async (req, res) => {
     }
 }
 
-// Obtener lista de usuarios (solo nombres)
+// Obtener lista de usuarios (nombres y emails)
 exports.getUsers = async (req, res) => {
     try {
-        // Obtiene solo los nombres de usuario de la base de datos
-        const users = await User.find({}, 'username');
+        // Obtiene username y email de los usuarios
+        const users = await User.find({}, 'username email');
         res.status(200).json(users);
     } catch (error) {
         res.status(500).json({error: error.message})

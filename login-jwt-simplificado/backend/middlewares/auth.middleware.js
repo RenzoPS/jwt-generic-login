@@ -3,14 +3,14 @@ const { getSecret } = require('../config/jwt.config')
 const User = require('../models/user')
 
 // Middleware de autenticación: Verifica si el usuario está autenticado
-const authMiddleware = async (req, res, next) => {
+const auth = async (req, res, next) => {
     try {
         // Obtiene el token del header de autorización
         const token = req.headers.authorization?.split(' ')[1]
 
         // Verifica si existe el token
         if (!token) {
-            return res.status(401).json({ message: 'No token provided' })
+            return res.status(401).json({ message: 'Token no proporcionado' })
         }
 
         // Verifica y decodifica el token JWT
@@ -19,7 +19,7 @@ const authMiddleware = async (req, res, next) => {
         // Verifica si el usuario existe en la base de datos
         const user = await User.findById(decoded.id)
         if (!user) {
-            return res.status(401).json({ message: 'User not found' })
+            return res.status(401).json({ message: 'Usuario no encontrado' })
         }
         
         // Agrega el usuario decodificado a la request
@@ -29,10 +29,10 @@ const authMiddleware = async (req, res, next) => {
         next()
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: 'Token expired' })
+            return res.status(401).json({ message: 'Token expirado' })
         }
-        return res.status(401).json({ message: 'Invalid token' })
+        res.status(401).json({ message: 'Token inválido' })
     }
 }
 
-module.exports = authMiddleware
+module.exports = auth

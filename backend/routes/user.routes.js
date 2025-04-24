@@ -10,10 +10,10 @@ router.post('/login', userController.login)        // Login de usuario
 router.post('/logout', userController.logout)      // Logout de usuario
 
 // Rutas protegidas (requieren autenticación)
-router.get('/list', authMiddleware, userController.getUsers)  // Obtener lista de usuarios
+router.get('/', authMiddleware, userController.getUsers)  // Obtener lista de usuarios
 
 // Rutas que requieren ser propietario o admin
-router.get('/:id', authMiddleware, isOwnerOrAdmin, userController.getUser)    // Obtener usuario específico
+router.get('/:id', authMiddleware, isOwnerOrAdmin, userController.getUsers)    // Obtener usuario específico
 router.put('/:id', authMiddleware, isOwnerOrAdmin, userController.updateUser) // Actualizar usuario
 router.delete('/:id', authMiddleware, isOwnerOrAdmin, userController.deleteUser) // Eliminar usuario
 

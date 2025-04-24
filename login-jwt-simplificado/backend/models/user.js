@@ -26,30 +26,17 @@ const userSchema = new mongoose.Schema({
     timestamps: true      // Agrega automáticamente createdAt y updatedAt
 })
 
-// Hash la contraseña antes de guardar
+// Hashear la contraseña antes de guardar
 userSchema.pre('save', async function(next) {
-    try {
-        // Solo hashea la contraseña si ha sido modificada o es nueva
-        if (!this.isModified('password')) {
-            return next()
-        }
-
-        // Genera un salt y hashea la contraseña
-        const salt = await bcrypt.genSalt(10)
-        this.password = await bcrypt.hash(this.password, salt)
-        next()
-    } catch (error) {
-        next(error)
+    if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10)
     }
+    next()
 })
 
-// Método para comparar contraseñas: Usado en el login
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    try {
-        return await bcrypt.compare(candidatePassword, this.password)
-    } catch (error) {
-        throw error
-    }
+// Verificar contraseña
+userSchema.methods.checkPassword = async function(password) {
+    return bcrypt.compare(password, this.password)
 }
 
 // Crea el modelo User basado en el esquema
