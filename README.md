@@ -9,7 +9,7 @@ Este es un login muy generico hecho con Node.js, le permite al usuario:
 ## ¿Como ejecutarlo?
 
 Hay que crear un archivo .env (en la carpeta backend) que contenga los siguientes datos:
-- ACCESS_TOKEN_SECRET (Puedes ejecutar el tokenGenerator.js para generar una clave aleatoria e igualarla la variable de entorno) 
+- ACCESS_TOKEN_SECRET (Puedes ejecutar el tokenGenerator.js en backend/src/utils para generar una clave aleatoria e igualarla la variable de entorno) 
 - PORT
 - MONGODB_URI
 
