@@ -1,31 +1,29 @@
-// Importaciones de dependencias
+// Importar dependencias
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
 const morgan = require('morgan')
 const helmet = require('helmet')
-const connectDB = require('./config/db')
-const errorHandler = require('./middlewares/errorHandler.middleware')
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 
-// Importación de rutas
-const userRoutes = require('./routes/user.routes')
+// Import rutas
+const userRoutes = require('./src/routes/user.routes')
 
-// Crear la aplicación Express
+// Crear la aplicación
 const app = express()
 
 // Conectar a la base de datos
+const connectDB = require('./src/config/db')
 connectDB()
 
-// Middlewares globales
-app.use(cors())  // Permite peticiones de diferentes orígenes
-app.use(morgan('dev'))  // Logging de peticiones HTTP
-app.use(helmet())  // Seguridad de headers HTTP
-app.use(express.json())  // Parseo de JSON en las peticiones
+// Middleware
+app.use(cors())  // Permite solicitudes de diferentes dominios
+app.use(express.json())  // Para analizar el cuerpo de las solicitudes JSON
+app.use(helmet())  // Protege la aplicación de ataques comunes
+app.use(morgan('dev'))  // Registra las solicitudes HTTP en la consola
+app.use(cookieParser())  // Analiza las cookies de las solicitudes
 
-// Rutas de la API
-app.use('/api/users', userRoutes)  // Rutas de usuario
-
-// Middleware de manejo de errores (debe ir al final)
-app.use(errorHandler)
-
+// Api
+app.use('/api/users', userRoutes)
 module.exports = app
