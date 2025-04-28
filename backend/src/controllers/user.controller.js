@@ -1,23 +1,19 @@
 const User = require('../models/user.js')
 const bcrypt = require('bcryptjs')
 const { createAccessToken } = require('../utils/jwt.js')
+const appError = require('../utils/appError.js')
 
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
     const { userName, email, password } = req.body
     try{
 
         // Hash the password
         const passwordHashed = await bcrypt.hash(password, 10)
         
-        // Validar que los datos no estén vacíos
-        if(!userName || !email || !password){
-            return res.status(400).json({ message: 'Todos los datos son requeridos' })
-        }
-        
         // Verifica que el usuario no exista con el mail
         const userExists = await User.findOne({ email })
         if(userExists){
-            return res.status(400).json({ message:'User already exists' })
+            throw new appError('User already exists', 400)  // Si el usuario ya existe, lanza un error
         }
 
         // Crea el nuevo usuario
@@ -38,29 +34,24 @@ exports.register = async (req, res) => {
         })
 
     } catch (e) {
-        res.status(500).json({ message: e.message })
+        next(e)  // Llama al siguiente middleware de manejo de errores
     }
 }
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
     const { email, password } = req.body
     try{
-        
-        // Validar que los datos no esten vacios
-        if(!email || !password){
-            return res.status(400).json({ message: 'Todos los datos son requeridos' })
-        }
 
         // Verifica que el mail exista
         const userFound = await User.findOne({ email })
         if(!userFound){
-            return res.status(400).json({ message: 'User is not found' })
+            throw new appError('User not found', 404) // Si el usuario no existe, lanza un error
         }
 
         // Verifica que la contraseña sea correcta
         const isMatch = await bcrypt.compare(password, userFound.password)
         if(!isMatch){ // Si la contraseña no coincide
-            return res.status(400).json({ message: 'Invalid credentials' })
+            throw new appError('Invalid credentials', 401) // Lanza un error de credenciales inválidas
         }
 
         // Crea el token con la funcion importada
@@ -75,16 +66,16 @@ exports.login = async (req, res) => {
         })
 
     } catch (e) {
-        res.status(500).json({ message: e.message })
+        next(e)  
     }
 }
 
-exports.logout = async (req, res) => {
+exports.logout = async (req, res, next) => {
     try{
         res.clearCookie('token') // Limpiar la cookie
         res.status(200).json({ message: 'Logout success' })
     } catch (e) {
-        res.status(500).json({ message: e.message })
+        next(e)
     }
 }
  
@@ -94,7 +85,7 @@ exports.getProfile = async (req, res) => {
 
         // Si no se encuentra el usuario, devuelve un error 404
         if(!userFound){ 
-            return res.status(404).json({ message: 'User not found' })
+            throw new appError('User not found', 404) // Lanza un error si el usuario no existe
         }
 
         // Si se encuentra el usuario, devuelve la información del perfil
@@ -106,16 +97,13 @@ exports.getProfile = async (req, res) => {
             updatedAt: userFound.updatedAt
         })
     } catch (e) {
-        res.status(500).json({ message: e.message })
+        next(e)
     }
 }
 
 exports.updateUserName = async (req, res) => {
     try{
         const { userName } = req.body // Obtiene el nuevo nombre de usuario del cuerpo de la solicitud
-        if(!userName){
-            return res.status(400).json({ message: 'Username is required' }) // Si no se proporciona un nuevo nombre de usuario, devuelve un error 400
-        }
 
         const userUpdated = await User.findByIdAndUpdate(
             req.user.id, // ID del usuario a actualizar
@@ -124,11 +112,11 @@ exports.updateUserName = async (req, res) => {
 
         // Si no se encuentra el usuario, devuelve un error 404
         if(!userUpdated){
-            return res.status(404).json({ message: 'User not found' })
+            throw new appError('User not found', 404) // Lanza un error si el usuario no existe
         }
-        res.json(userUpdated.userName) // Devuelve el usuario actualizado
+        res.status(200).json(userUpdated.userName) // Devuelve el usuario actualizado
 
     } catch (e) {
-        res.status(500).json({ message: e.message })
+        next(e)
     }
 }

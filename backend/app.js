@@ -5,6 +5,7 @@ const mongoose = require('mongoose')
 const morgan = require('morgan')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
+const errorHandler = require('./src/middlewares/errorHandler')
 require('dotenv').config()
 
 // Import rutas
@@ -26,4 +27,9 @@ app.use(cookieParser())  // Analiza las cookies de las solicitudes
 
 // Api
 app.use('/api/users', userRoutes)
+
+// Middleware de manejo de errores
+app.use(errorHandler)  // Maneja los errores de la aplicación
+
+
 module.exports = app
