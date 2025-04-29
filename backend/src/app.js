@@ -1,21 +1,20 @@
 // Importar dependencias
 const express = require('express')
 const cors = require('cors')
-const mongoose = require('mongoose')
 const morgan = require('morgan')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
-const errorHandler = require('./src/middlewares/errorHandler')
+const errorHandler = require('./middlewares/errorHandler')
 require('dotenv').config()
 
 // Import rutas
-const userRoutes = require('./src/routes/user.routes')
+const userRoutes = require('./routes/user.routes')
 
 // Crear la aplicación
 const app = express()
 
 // Conectar a la base de datos
-const connectDB = require('./src/config/db')
+const connectDB = require('./config/db')
 connectDB()
 
 // Middleware
