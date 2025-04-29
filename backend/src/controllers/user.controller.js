@@ -79,7 +79,7 @@ exports.logout = async (req, res, next) => {
     }
 }
  
-exports.getProfile = async (req, res) => {
+exports.getProfile = async (req, res, next) => {
     try{
         const userFound = await User.findById(req.user.id) // Busca el usuario por ID
 
@@ -101,7 +101,7 @@ exports.getProfile = async (req, res) => {
     }
 }
 
-exports.updateUserName = async (req, res) => {
+exports.updateUserName = async (req, res, next) => {
     try{
         const { userName } = req.body // Obtiene el nuevo nombre de usuario del cuerpo de la solicitud
 
@@ -116,6 +116,19 @@ exports.updateUserName = async (req, res) => {
         }
         res.status(200).json(userUpdated.userName) // Devuelve el usuario actualizado
 
+    } catch (e) {
+        next(e)
+    }
+}
+
+exports.deleteUser = async (req, res, next) => {
+    try {
+        const userDeleted = await User.findByIdAndDelete(req.user.id)
+        if(!userDeleted){
+            throw new appError('User not found', 404)
+        
+        res.status(200).json({ message: 'User deleted' })
+        }
     } catch (e) {
         next(e)
     }
